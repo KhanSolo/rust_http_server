@@ -17,8 +17,26 @@ impl TryFrom<&[u8]> for Request {
     fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
         let request = str::from_utf8(buf)?;
 
+        // match get_next_word(request) {
+        //     Some((method, request)) => {},
+        //     None => return Err(ParseError::InvalidRequest),
+        // }
+
+        let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+
         unimplemented!()
     }
+}
+
+// next_word - remainder of string
+fn get_next_word(request: &str) -> Option<(&str, &str)> {
+    for (i, c) in request.chars().enumerate() {
+        if c == ' ' {
+            return Some((&request[..i], &request[i + 1..])); // i + i - adding 1 byte, not a one char!! because we are skipping a space char
+        }
+    }
+
+    None
 }
 
 pub enum ParseError {
