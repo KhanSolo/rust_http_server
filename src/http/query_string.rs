@@ -8,10 +8,12 @@ use std::collections::HashMap;
 // d - [None,7,abc]
 // e - ==
 
+#[derive(Debug)]
 pub struct QueryString<'buf> {
     data: HashMap<&'buf str, Value<'buf>>
 }
 
+#[derive(Debug)]
 pub enum Value<'buf> {
     Single(&'buf str),
     Multiple(Vec<&'buf str>), // allocating in heap
@@ -35,16 +37,15 @@ impl<'buf> From<&'buf str> for QueryString<'buf>{
                 val = &sub_str[i+1..];
             }
 
+            data.entry(key)
             // if the key exists already
-            data
-            .entry(key)
             .and_modify(|existing: &mut Value| match existing{
                 Value::Single(prev_val) => {
-                    //let mut vec = vec![prev_val, val];
-                    *existing = Value::Multiple(vec![prev_val, val]);
+                    *existing = Value::Multiple(vec![prev_val, val]); // this is safe due to equal space taken by each Value
                 }
                 Value::Multiple(vec) => vec.push(val)
             })
+            // if doesn't
             .or_insert(Value::Single(val));
         }
 
