@@ -2,7 +2,7 @@ use super::method::{Method, MethodError};
 use super::QueryString;
 use std::convert::TryFrom;
 use std::error::Error;
-use std::fmt::{Display, Formatter, Debug, Result as FmtResult};
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::str;
 use std::str::Utf8Error;
 
