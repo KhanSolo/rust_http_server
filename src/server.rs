@@ -1,4 +1,5 @@
-use crate::http::Request;
+use crate::http::{Request, Response, StatusCode};
+
 use std::convert::TryFrom;
 use std::net::TcpListener;
 use std::io::{Read, Write};
@@ -22,18 +23,20 @@ impl Server{
                 Ok((mut stream, _))=>{
                     let mut buffer = [0; 1024];
                     match stream.read(&mut buffer){
-                        Ok(_)=>{
+                        Ok(_) => {
                             println!("Received a request: {}", String::from_utf8_lossy(& buffer));
 
                                 match Request::try_from(&buffer[..]){
                                     Ok(request) => {
                                         dbg!(request);
-                                        write!(stream, "HTTP/1.1 404 Not Found\r\nTest: Hi\r\n\r\n<html><body>Not found</body></html>");
+                                        let response = Response::new(StatusCode::Ok, 
+                                            Some("<h1> Working...</h1>".to_string()));
+                                        write!(stream, "{}", response);
                                     },
                                     Err(e) => println!("Failed to parse a request : {}", e)
                                 }
                         },
-                        Err(e)=>{
+                        Err(e) => {
                             println!("Failed to read from connecion {}", e);
                         }
                     };
