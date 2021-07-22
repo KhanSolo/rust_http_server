@@ -15,8 +15,8 @@ impl Response {
         Response { status_code, body}
     }
 
-                                // dynamic dispatch (vtable)
-    pub fn send(&self, stream: &mut dyn Write) -> IoResult<()>{
+                // static dispatch. Functions will be generated for each invoked type implementing Write
+    pub fn send(&self, stream: &mut impl Write) -> IoResult<()>{
         let body = match &self.body {
             Some(b) => b,
             None => ""
