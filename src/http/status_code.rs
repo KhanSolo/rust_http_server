@@ -3,9 +3,9 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 #[derive(Copy, Clone)] // cpoy is for casting as u16
 #[derive(Debug)]
 pub enum StatusCode {
-    Ok          = 200,
-    BadRequest  = 400,
-    NotFound    = 404,
+    Ok = 200,
+    BadRequest = 400,
+    NotFound = 404,
 }
 
 impl StatusCode {

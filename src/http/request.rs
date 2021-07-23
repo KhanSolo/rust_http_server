@@ -25,18 +25,18 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
 
         if protocol != "HTTP/1.1" {
-            return Err (ParseError::InvalidProtocol);
+            return Err(ParseError::InvalidProtocol);
         }
 
         let method: Method = method.parse()?;
 
         let mut query_string = None;
-        if let Some(i) = path.find('?'){
+        if let Some(i) = path.find('?') {
             query_string = Some(QueryString::from(&path[i + 1..]));
-            path = &path[..i];            
+            path = &path[..i];
         }
 
-        Ok(Self{
+        Ok(Self {
             path,
             query_string,
             method,
@@ -73,26 +73,26 @@ impl ParseError {
     }
 }
 
-impl From<MethodError> for ParseError{
-    fn from(_: MethodError) -> Self{
+impl From<MethodError> for ParseError {
+    fn from(_: MethodError) -> Self {
         Self::InvalidMethod
     }
 }
 
-impl From<Utf8Error> for ParseError{
-    fn from(_: Utf8Error) -> Self{
+impl From<Utf8Error> for ParseError {
+    fn from(_: Utf8Error) -> Self {
         Self::InvalidEncoding
     }
 }
 
-impl Display for ParseError{
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult{
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
-impl Debug for ParseError{
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult{
+impl Debug for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
