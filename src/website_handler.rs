@@ -20,19 +20,16 @@ impl WebsiteHandler {
     }
 
     fn read_file_windows(&self, file_path: &str) -> Option<String> {
-        let path = format!("{}\\{}", self.public_path, file_path);
-        let canonicalized = fs::canonicalize(path);
-        match canonicalized {
-            Ok(path) => {
-                if path.starts_with(&self.public_path) {
-                   fs::read_to_string(path).ok()
-                } else {
-                    println!("Directory traversal attack attempted: {}", file_path);
-                    println!("&self.public_path: {}", &self.public_path);
-                    None
-                }
-            }
-            Err(_) => None,
+
+        match file_path.contains(".."){
+            false => {
+                let path = format!("{}{}", self.public_path, file_path.replace("/", "\\"));
+                fs::read_to_string(path).ok()
+            },
+            true => {
+                println!("Directory traversal attack attempted: {}", file_path);
+                None
+            },
         }
     }
 
@@ -56,8 +53,8 @@ impl Handler for WebsiteHandler {
     fn handle_request(&mut self, request: &Request) -> Response {
         match request.method() {
             Method::GET => match request.path() {
-                "/" => Response::new(StatusCode::Ok, self.read_file("index.html")),
-                "/hello" => Response::new(StatusCode::Ok, self.read_file("hello.html")),
+                "/" => Response::new(StatusCode::Ok, self.read_file("/index.html")),
+                "/hello" => Response::new(StatusCode::Ok, self.read_file("/hello.html")),
                 path => match self.read_file(path) {
                     Some(contents) => Response::new(StatusCode::Ok, Some(contents)),
                     None => Response::new(StatusCode::NotFound, None),
