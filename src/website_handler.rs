@@ -12,12 +12,36 @@ impl WebsiteHandler {
     }
 
     fn read_file(&self, file_path: &str) -> Option<String> {
-        let path = format!("{}/{}", self.public_path, file_path);
+        match std::env::consts::OS {
+            "windows" => self.read_file_windows(file_path),
+            "linux"   => self.read_file_linux(file_path),
+            _ => None,
+        }
+    }
 
+    fn read_file_windows(&self, file_path: &str) -> Option<String> {
+        let path = format!("{}\\{}", self.public_path, file_path);
+        let canonicalized = fs::canonicalize(path);
+        match canonicalized {
+            Ok(path) => {
+                if path.starts_with(&self.public_path) {
+                   fs::read_to_string(path).ok()
+                } else {
+                    println!("Directory traversal attack attempted: {}", file_path);
+                    println!("&self.public_path: {}", &self.public_path);
+                    None
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
+    fn read_file_linux(&self, file_path: &str) -> Option<String> {
+        let path = format!("{}/{}", self.public_path, file_path);
         match fs::canonicalize(path) {
             Ok(path) => {
                 if path.starts_with(&self.public_path) {
-                    fs::read_to_string(path).ok()
+                   fs::read_to_string(path).ok()
                 } else {
                     println!("Directory traversal attack attempted: {}", file_path);
                     None
