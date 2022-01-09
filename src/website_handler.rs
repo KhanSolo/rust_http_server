@@ -1,5 +1,7 @@
 use super::http::{Method, Request, Response, StatusCode};
 use super::server::Handler;
+
+use std::env;
 use std::fs;
 
 pub struct WebsiteHandler {
@@ -12,24 +14,23 @@ impl WebsiteHandler {
     }
 
     fn read_file(&self, file_path: &str) -> Option<String> {
-        match std::env::consts::OS {
+        match env::consts::OS {
             "windows" => self.read_file_windows(file_path),
-            "linux"   => self.read_file_linux(file_path),
+            "linux" => self.read_file_linux(file_path),
             _ => None,
         }
     }
 
     fn read_file_windows(&self, file_path: &str) -> Option<String> {
-
-        match file_path.contains(".."){
+        match file_path.contains("..") {
             false => {
                 let path = format!("{}{}", self.public_path, file_path.replace("/", "\\"));
                 fs::read_to_string(path).ok()
-            },
+            }
             true => {
                 println!("Directory traversal attack attempted: {}", file_path);
                 None
-            },
+            }
         }
     }
 
@@ -38,7 +39,7 @@ impl WebsiteHandler {
         match fs::canonicalize(path) {
             Ok(path) => {
                 if path.starts_with(&self.public_path) {
-                   fs::read_to_string(path).ok()
+                    fs::read_to_string(path).ok()
                 } else {
                     println!("Directory traversal attack attempted: {}", file_path);
                     None
