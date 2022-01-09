@@ -1,8 +1,8 @@
-use std::thread;
+use std::{thread, sync::{mpsc::{self, Receiver, Sender}, Arc, Mutex}};
 
 pub struct ThreadPool {
-    //threads: Vec<thread::JoinHandle<()>>,
     workers: Vec<Worker>,
+    sender: mpsc::Sender<Job>, // todo get rid of mpsc
 }
 
 impl ThreadPool {
@@ -23,18 +23,25 @@ impl ThreadPool {
         assert!(size > 0);
 
         let mut workers = Vec::with_capacity(size);
+        let (sender, receiver) = mpsc::channel();
+
+        let receiver = Arc::new(Mutex::new(receiver));
 
         for id in 0..size{
-            workers.push(Worker::new(id));
+            workers.push(Worker::new(id, 
+                Arc::clone(&receiver)
+            ));
         }
 
-        ThreadPool { workers }
+        ThreadPool { workers, sender }
     }
 
     pub fn execute<F>(&self, f: F)
     where
-        F: FnOnce() + Send, // + 'static,
+        F: FnOnce() + Send + 'static,
     {
+        let job = Box::new(f);
+        self.sender.send(job).unwrap();
     }
 }
 
@@ -44,8 +51,18 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id:usize)->Self{
-        let thread = thread::spawn(||{});
+    fn new(id:usize, receiver:Arc<Mutex<Receiver<Job>>>)->Self{
+        let thread = thread::spawn(move || loop { 
+            let job = receiver
+            .lock().unwrap()
+            .recv().unwrap();    
+
+            println!("Received a job {}", id);
+
+            job();
+        });
         Worker { id, thread }
     }
 }
+
+type Job = Box<dyn FnOnce() + Send + 'static>;
