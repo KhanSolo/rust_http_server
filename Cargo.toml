@@ -2,3 +2,10 @@
 name = "rust_http_server"
 version = "0.1.0"
 edition = "2021"
+
+# optimizing
+[profile.release]
+strip = true        # strips symbols from binary
+opt-level = "s"     # optimization for binary size
+lto = true          # link time optimization
+codegen-units = 1   #  default = 16. Setting this to 1 may improve the performance of generated code, but may be slower to compile.
