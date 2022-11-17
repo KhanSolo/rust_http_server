@@ -23,5 +23,6 @@ fn main() {
     println!("public path: {}", public_path);
     let server = Server::new("127.0.0.1:8080".to_string());
     let handler = WebsiteHandler::new(public_path);
+
     server.run(handler);
 }

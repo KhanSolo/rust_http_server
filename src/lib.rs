@@ -1,4 +1,10 @@
-use std::{thread, sync::{mpsc::{self, Receiver, Sender}, Arc, Mutex}};
+use std::{
+    sync::{
+        mpsc::{self, Receiver},
+        Arc, Mutex,
+    },
+    thread,
+};
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
@@ -6,19 +12,6 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
-    /// Creates a new [`ThreadPool`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rust_http_server::ThreadPool;
-    ///
-    /// assert_eq!(ThreadPool::new(size), );
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// Panics if .
     pub fn new(size: usize) -> Self {
         assert!(size > 0);
 
@@ -27,10 +20,8 @@ impl ThreadPool {
 
         let receiver = Arc::new(Mutex::new(receiver));
 
-        for id in 0..size{
-            workers.push(Worker::new(id, 
-                Arc::clone(&receiver)
-            ));
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
         ThreadPool { workers, sender }
@@ -38,10 +29,13 @@ impl ThreadPool {
 
     pub fn execute<F>(&self, f: F)
     where
-        F: FnOnce() + Send + 'static,
+        F:  FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
         self.sender.send(job).unwrap();
+        // let sender = &self.sender;
+        // let t:Box<dyn Fn()+Send+Sync>;
+        // sender.send(t);
     }
 }
 
@@ -51,11 +45,11 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id:usize, receiver:Arc<Mutex<Receiver<Job>>>)->Self{
-        let thread = thread::spawn(move || loop { 
+    fn new(id: usize, receiver: Arc<Mutex<Receiver<Job>>>) -> Self {
+        let thread = thread::spawn(move || loop {
             let job = receiver
-            .lock().unwrap()
-            .recv().unwrap();    
+            .lock().unwrap() // lock mutex
+            .recv().unwrap();
 
             println!("Received a job {}", id);
 
