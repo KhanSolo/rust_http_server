@@ -7,6 +7,14 @@ mod server;
 mod website_handler;
 
 fn main() {
+    let public_path = get_public_path();
+    let handler = WebsiteHandler::new(public_path);
+    let server = Server::new("127.0.0.1:8080".to_string());
+
+    server.run(&handler);
+}
+
+fn get_public_path() -> String {
     let delimiter = match env::consts::OS {
         "windows" => "\\",
         _ => "/",
@@ -19,10 +27,6 @@ fn main() {
         Ok(path) => path.into_os_string().into_string().unwrap(),
         Err(_) => todo!(),
     };
-
     println!("public path: {}", public_path);
-    let server = Server::new("127.0.0.1:8080".to_string());
-    let handler = WebsiteHandler::new(public_path);
-
-    server.run(handler);
+    public_path
 }

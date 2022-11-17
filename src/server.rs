@@ -8,7 +8,6 @@ use std::io::{Error, Read};
 use std::marker::Sync;
 use std::net::{SocketAddr, TcpListener, TcpStream};
 
-
 pub trait Handler {
     fn handle_request(&self, request: &Request) -> Response;
     fn handle_bad_request(&self, e: &ParseError) -> Response {
@@ -26,29 +25,27 @@ impl Server {
         Self { addr }
     }
 
-    pub fn run<T: Handler + Send + Sync + Clone + 'static>(self, handler: T) {
+    pub fn run<T: Handler + Send + Sync + Clone>(self, handler: &T) {
         println!("Listening on {}", self.addr);
 
         let listener = TcpListener::bind(&self.addr).unwrap();
         let pool = ThreadPool::new(4);
 
-        loop 
-        {
+        loop {
             let result: Result<(TcpStream, SocketAddr), Error> = listener.accept();
-            
-            let clos =  || {
-                process_stream(result, 
-                    //&handler
-                    &WebsiteHandler::new("".to_string())
-                );
+
+            let clos = move || {
+                process_stream(result, handler);
             };
 
             pool.execute(clos);
+
+            format!("");
         }
     }
 }
 
-fn process_stream<T:  Handler>(result: Result<(TcpStream, SocketAddr), Error>, handler: &T) {
+fn process_stream<T: Handler>(result: Result<(TcpStream, SocketAddr), Error>, handler: &T) {
     match result {
         Ok((mut stream, _)) => {
             let mut buffer = [0; 1024];
