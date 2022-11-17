@@ -1,12 +1,12 @@
 use rust_http_server::ThreadPool;
 
 use crate::http::{ParseError, Request, Response, StatusCode};
-use crate::website_handler::WebsiteHandler;
 
 use std::convert::TryFrom;
 use std::io::{Error, Read};
 use std::marker::Sync;
 use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::sync::Arc;
 
 pub trait Handler {
     fn handle_request(&self, request: &Request) -> Response;
@@ -25,27 +25,25 @@ impl Server {
         Self { addr }
     }
 
-    pub fn run<T: Handler + Send + Sync + Clone>(self, handler: &T) {
+    pub fn run<T: Handler + Send + Sync + 'static>(self, handler: T) {
         println!("Listening on {}", self.addr);
 
         let listener = TcpListener::bind(&self.addr).unwrap();
         let pool = ThreadPool::new(4);
-
+        let boxed = Arc::new(handler);
         loop {
             let result: Result<(TcpStream, SocketAddr), Error> = listener.accept();
-
+            let cpy = Arc::clone(&boxed);
             let clos = move || {
-                process_stream(result, handler);
+                process_stream(result, cpy);
             };
 
             pool.execute(clos);
-
-            format!("");
         }
     }
 }
 
-fn process_stream<T: Handler>(result: Result<(TcpStream, SocketAddr), Error>, handler: &T) {
+fn process_stream<T: Handler>(result: Result<(TcpStream, SocketAddr), Error>, handler: Arc<T>) {
     match result {
         Ok((mut stream, _)) => {
             let mut buffer = [0; 1024];

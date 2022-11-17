@@ -65,11 +65,3 @@ impl Handler for WebsiteHandler {
         }
     }
 }
-
-impl Clone for WebsiteHandler{
-    fn clone(&self) -> Self{
-        WebsiteHandler::new(self.public_path.clone())
-    }
-}
-
-//impl Copy for WebsiteHandler{}
